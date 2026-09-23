@@ -10,6 +10,8 @@ import {
   ticketIdParamSchema,
   updateTicketSchema
 } from './ticket.schemas.js';
+import { commentController } from './comment.controller.js';
+import { createCommentSchema } from './ticket.schemas.js';
 
 export const ticketRoutes = Router();
 
@@ -146,5 +148,26 @@ ticketRoutes.patch(
   validate({ params: ticketIdParamSchema, body: assignTicketSchema }),
   (req, res, next) => {
     ticketController.assign(req, res).catch(next);
+  }
+);
+
+ticketRoutes.post(
+  '/:id/comments',
+  validate({
+    params: ticketIdParamSchema,
+    body: createCommentSchema
+  }),
+  (req, res, next) => {
+    commentController.create(req, res).catch(next);
+  }
+);
+
+ticketRoutes.get(
+  '/:id/comments',
+  validate({
+    params: ticketIdParamSchema
+  }),
+  (req, res, next) => {
+    commentController.list(req, res).catch(next);
   }
 );
