@@ -203,4 +203,51 @@ describe('ticket API', () => {
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe('INVALID_ASSIGNEE');
   });
+
+  it('allows a user to create a comment on their own ticket', async () => {
+    const response = await api
+      .post('/api/tickets/unable-to-reset-password/comments')
+      .set('Authorization', `Bearer ${user1Token}`)
+      .send({
+        body: 'Customer provided additional information.'
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.body).toBe(
+      'Customer provided additional information.'
+    );
+    expect(response.body.data.author.email).toBe('user1@example.com');
+  });
+
+  it('allows a user to  list comments on their own ticket', async () => {
+    const createResponse = await api
+      .post('/api/tickets/unable-to-reset-password/comments')
+      .set('Authorization', `Bearer ${user1Token}`)
+      .send({
+        body: 'Follow-up information from the customer.'
+      });
+
+    expect(createResponse.status).toBe(201);
+
+    const response = await api
+      .get('/api/tickets/unable-to-reset-password/comments')
+      .set('Authorization', `Bearer ${user1Token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.length).toBeGreaterThan(0);
+
+    const comments = response.body.data as Array<{
+      body: string;
+      author: {
+        email: string;
+      };
+    }>;
+
+    const comment = comments.find(
+      (item) => item.body === 'Follow-up information from the customer.'
+    );
+
+    expect(comment).toBeDefined();
+    expect(comment?.author.email).toBe('user1@example.com');
+  });
 });
