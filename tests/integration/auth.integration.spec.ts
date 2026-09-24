@@ -98,7 +98,7 @@ describe('authentication API', () => {
     const response = await api
       .patch('/api/tickets/unable-to-reset-password/status')
       .set('Authorization', `Bearer ${user1Token}`)
-      .send({ status: 'CLOSE' });
+      .send({ status: 'CLOSED' });
 
     expect(response.status).toBe(403);
     expect(response.body.error.code).toBe('FORBIDDEN');
