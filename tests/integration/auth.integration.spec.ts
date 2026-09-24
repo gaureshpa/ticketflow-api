@@ -5,9 +5,18 @@ import {
   resetTestDatabase
 } from '../helpers/test-db.js';
 
+async function login(email: string, password: string) {
+  const response = await api.post('/api/auth/login').send({ email, password });
+  return response.body.data.token as string;
+}
+
 describe('authentication API', () => {
+  let user1Token: string;
+
   beforeAll(async () => {
     await resetTestDatabase();
+
+    user1Token = await login('user1@example.com', 'User123!');
   });
 
   afterAll(async () => {
@@ -63,5 +72,25 @@ describe('authentication API', () => {
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('prevents a user from creating a comment on another users ticket', async () => {
+    const response = await api
+      .post('/api/tickets/payment-failed-during-checkout/comments')
+      .set('Authorization', `Bearer ${user1Token}`)
+      .send({
+        body: 'I should not be able to comment on this ticket.'
+      });
+
+    expect(response.status).toBe(403);
+  });
+
+  it('prevents a user from viewing status history of another users ticket', async () => {
+    const response = await api
+      .get('/api/tickets/payment-failed-during-checkout/status-history')
+      .set('Authorization', `Bearer ${user1Token}`);
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe('FORBIDDEN');
   });
 });
