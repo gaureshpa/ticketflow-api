@@ -12,6 +12,7 @@ import {
 } from './ticket.schemas.js';
 import { commentController } from './comment.controller.js';
 import { createCommentSchema } from './ticket.schemas.js';
+import { statusHistoryController } from './status-history.controller.js';
 
 export const ticketRoutes = Router();
 
@@ -169,5 +170,15 @@ ticketRoutes.get(
   }),
   (req, res, next) => {
     commentController.list(req, res).catch(next);
+  }
+);
+
+ticketRoutes.get(
+  '/:id/status-history',
+  validate({
+    params: ticketIdParamSchema
+  }),
+  (req, res, next) => {
+    statusHistoryController.list(req, res).catch(next);
   }
 );

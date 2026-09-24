@@ -79,12 +79,14 @@ model Comment {
 model StatusHistory {
   id          String       @id @default(cuid())
   ticketId    String
-  formStatus  TicketStatus
+  fromStatus  TicketStatus
   toStatus    TicketStatus
   changedById String
+  createdAt   DateTime     @default(now())
   ticket      Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   changedBy   User         @relation(fields: [changedById], references: [id], onDelete: Restrict)
 
   @@index([ticketId])
   @@index([changedById])
 }
+

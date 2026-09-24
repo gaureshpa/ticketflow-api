@@ -19,6 +19,7 @@ import type {
   ListTicketsQuery,
   UpdateTicketInput
 } from './ticket.schemas.js';
+import { StatusHistoryRepository } from './status-history.repository.js';
 
 const allowedTransitions: Record<TicketStatus, TicketStatus[]> = {
   OPEN: [TicketStatus.IN_PROGRESS, TicketStatus.CLOSED],
@@ -39,6 +40,7 @@ type ListTicketsInput = ListTicketsQuery & {
 };
 
 const repository = new TicketRepository();
+const statusHistoryRepository = new StatusHistoryRepository();
 
 function canViewTicket(user: AuthUser, ticket: TicketWithRelations) {
   if (user.role === Role.ADMIN || user.role === Role.AGENT) {
@@ -244,7 +246,18 @@ export class TicketService {
       );
     }
 
-    return repository.update(ticketId, { status: nextStatus });
+    const updatedTicket = await repository.update(ticketId, {
+      status: nextStatus
+    });
+
+    await statusHistoryRepository.create({
+      ticketId: ticket.id,
+      fromStatus: ticket.status,
+      toStatus: nextStatus,
+      changedById: currentUser.userId
+    });
+
+    return updatedTicket;
   }
 
   async assignTicket(
