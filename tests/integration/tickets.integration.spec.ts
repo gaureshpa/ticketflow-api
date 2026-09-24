@@ -250,4 +250,35 @@ describe('ticket API', () => {
     expect(comment).toBeDefined();
     expect(comment?.author.email).toBe('user1@example.com');
   });
+
+  it('creates and returns status history after a status change', async () => {
+    const changeResponse = await api
+      .patch('/api/tickets/unable-to-reset-password/status')
+      .set('Authorization', `Bearer ${agentToken}`)
+      .send({ status: 'RESOLVED' });
+
+    expect(changeResponse.status).toBe(200);
+
+    const historyResponse = await api
+      .get('/api/tickets/unable-to-reset-password/status-history')
+      .set('Authorization', `Bearer ${agentToken}`);
+
+    expect(historyResponse.status).toBe(200);
+
+    const history = historyResponse.body.data as Array<{
+      fromStatus: string;
+      toStatus: string;
+      changedBy: {
+        email: string;
+      };
+    }>;
+
+    const change = history.find(
+      (item) =>
+        item.fromStatus === 'IN_PROGRESS' && item.toStatus === 'RESOLVED'
+    );
+
+    expect(change).toBeDefined();
+    expect(change?.changedBy.email).toBe('agent@example.com');
+  });
 });
